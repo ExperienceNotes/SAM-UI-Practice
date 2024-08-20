@@ -11,6 +11,7 @@ from types import TracebackType
 from typing import Optional
 from SAM_Function import MyGraphicsScene
 from segment_anything import sam_model_registry
+from sam2.build_sam import build_sam2
 
 
 class Ui_Dialog(object):
@@ -24,14 +25,19 @@ class Ui_Dialog(object):
         file_handler.setFormatter(formatter)
         self.logger.addHandler(file_handler)
         sys.excepthook = self.handle_exception
-
-        self.sam_checkpoint: Optional[str] = "sam_vit_h_4b8939.pth"
-        self.model_type: str = "vit_h"
-        self.device: str = "cuda"
-        self.model_url = "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth"
         self.setting_path = "Setting.json"
         self.Setting_Para = self.load_setting()
-        self.seg_model = self.initialize_predictor()
+        self.device: str = "cuda"
+        if self.Setting_Para["version"] == 1:
+            self.model_type: str = "vit_h"
+            self.model_url = self.Setting_Para["Model_Url"]
+            self.check_and_download_model()
+            self.seg_model = self.initialize_predictor_v1()
+        elif self.Setting_Para["version"] == 2:
+            self.model_cfg = "./sam2_hiera_b+.yaml"
+            self.model_url = self.Setting_Para["Model_Url"]
+            self.check_and_download_model()
+            self.seg_model = self.initialize_predictor_v2()
 
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -148,7 +154,11 @@ class Ui_Dialog(object):
         self.logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
 
     def check_and_download_model(self):
-        if not os.path.exists(self.sam_checkpoint):
+        checkpoint_dir = os.path.dirname(self.Setting_Para["sam_checkpoint"])
+        if not os.path.exists(checkpoint_dir):
+            os.makedirs(checkpoint_dir)
+
+        if not os.path.exists(self.Setting_Para["sam_checkpoint"]):
             reply = QtWidgets.QMessageBox.question(self, 'Model Download',
                                                    'Model file not found. Do you want to download it?',
                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
@@ -166,11 +176,11 @@ class Ui_Dialog(object):
                     progress_dialog.show()
 
                     downloaded_size = 0
-                    with open(self.sam_checkpoint, 'wb') as f:
+                    with open(self.Setting_Para["sam_checkpoint"], 'wb') as f:
                         for chunk in response.iter_content(chunk_size=8192):
                             if progress_dialog.wasCanceled():
                                 self.logger.info("Model download canceled by user.")
-                                os.remove(self.sam_checkpoint)
+                                os.remove(self.Setting_Para["sam_checkpoint"])
                                 return
                             f.write(chunk)
                             downloaded_size += len(chunk)
@@ -185,11 +195,24 @@ class Ui_Dialog(object):
                 self.logger.info("Model download canceled by user.")
                 sys.exit()
 
-    def initialize_predictor(self):
-        self.logger.info("Loading Model...")
+    def initialize_predictor_v1(self):
+        self.logger.info("Loading Sam1 Model...")
         t_s = time.perf_counter()
         try:
-            seg_model = sam_model_registry[self.model_type](checkpoint=self.sam_checkpoint)
+            seg_model = sam_model_registry[self.model_type](checkpoint=self.Setting_Para["sam_checkpoint"])
+            seg_model.to(device=self.device)
+            t_e = time.perf_counter()
+            self.logger.info(f"Model initialized successfully, Loading time: {(t_e - t_s):.4f} sec")
+            return seg_model
+        except Exception as e:
+            self.logger.error(f"Failed to initialize model: {e}")
+
+    def initialize_predictor_v2(self):
+        self.logger.info("Loading Sam2 Model...")
+        t_s = time.perf_counter()
+        try:
+            check_point_path = os.path.join(os.getcwd(), self.Setting_Para["sam_checkpoint"])
+            seg_model = build_sam2(self.model_cfg, check_point_path, self.device)
             seg_model.to(device=self.device)
             t_e = time.perf_counter()
             self.logger.info(f"Model initialized successfully, Loading time: {(t_e - t_s):.4f} sec")

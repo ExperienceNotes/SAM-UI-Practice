@@ -4,6 +4,7 @@ import time
 
 from PyQt5 import QtGui, QtWidgets
 from segment_anything import SamPredictor
+from sam2.sam2_image_predictor import SAM2ImagePredictor
 from typing import Optional
 from SAM_Function import load_folder, resize_image, MaskSelectionDialog, apply_mask_to_image
 import SAM_UI
@@ -58,7 +59,10 @@ class Test_demo(QtWidgets.QWidget, SAM_UI.Ui_Dialog):
             self.graphicScene.addItem(item)
             self.graphicsView_2.setScene(self.graphicScene)
             self.graphicsView_2.show()
-            self.predictor: SamPredictor = SamPredictor(self.seg_model)
+            if self.Setting_Para["version"] == 1:
+                self.predictor: SamPredictor = SamPredictor(self.seg_model)
+            elif self.Setting_Para["version"] == 2:
+                self.predictor: SAM2ImagePredictor = SAM2ImagePredictor(self.seg_model)
             self.predictor.set_image(self.image)
             time_e = time.perf_counter()
             self.logger.info(f"Loading Graph and Encoder Image successfully, Loading time: {(time_e - time_s):.4f} sec")
@@ -73,7 +77,6 @@ class Test_demo(QtWidgets.QWidget, SAM_UI.Ui_Dialog):
                 multimask_output=True,
             )
             if self.comboBox.currentText():
-                print("")
                 label_key: int = self.comboBox.currentIndex()
             else:
                 reply = QtWidgets.QMessageBox.question(self, "Enter label name", "You did not enter a label name",
@@ -82,7 +85,7 @@ class Test_demo(QtWidgets.QWidget, SAM_UI.Ui_Dialog):
                     return
 
             self.show_mask_selection_dialog(masks, scores, label_key)
-            # self.logger.info(f"Predicted mask for image: {self.image_path}")
+            self.logger.info(f"Predicted mask for image: {self.image_path}")
 
     def on_image_click(self, x: int, y: int, label: int):
         if self.image is not None:

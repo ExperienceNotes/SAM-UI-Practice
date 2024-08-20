@@ -178,7 +178,8 @@ class MaskSelectionDialog(QtWidgets.QDialog):
         :param index: Index of the mask to be displayed.
         """
         mask_image, _ = apply_mask_to_image(self.image, self.masks[index], self.label_key)
-        mask_image = resize_image(mask_image, self.image_label.width(), self.image_label.height())
+        # self.image_label.width(), self.image_label.height()
+        mask_image = resize_image(mask_image, self.image.shape[0], self.image.shape[1])
         height, width, _ = mask_image.shape
         bytes_per_line: int = 3 * width
         q_image: QtGui.QImage = QtGui.QImage(mask_image.data, width, height, bytes_per_line, QtGui.QImage.Format_RGB888)

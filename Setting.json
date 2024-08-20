@@ -1,3 +1,6 @@
 {
+  "version": 2,
+  "Model_Url": "https://dl.fbaipublicfiles.com/segment_anything_2/072824/sam2_hiera_base_plus.pt",
+  "sam_checkpoint": "checkpoints/sam2_hiera_base_plus.pt",
   "classes": ["Card", "Truck", "Dog", "Bicycle"]
 }
