@@ -95,8 +95,9 @@ class Test_demo(QtWidgets.QWidget, SAM_UI.Ui_Dialog):
             image_height, image_width, _ = self.image.shape
             scale_x: float = image_width / window_w
             scale_y: float = image_height / window_h
-
-            point: list[int] = [int(x * scale_x), int(y * scale_y)]
+            print(f"window_w: {window_w}")
+            print(f"window_h: {window_h}")
+            point: list[int] = [int(x) * scale_x, int(y) * scale_y + 55]
             self.input_points.append(point)
             self.input_labels.append(label)
 

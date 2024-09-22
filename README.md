@@ -16,13 +16,21 @@
 - Instantly preview the effects of edited labels and support saving edited results in standard formats such as PNG, JSON or XML.    
     
 ## How to Use    
- ### Environment Setup  
+ ### Environment Setup
  ```bash
-pip install -r requirements.txt pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu121  
-```  
+pip install -r requirements.txt
+pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu118  
+```
+
+`Notice:` SAM2 requires Torch version 2.3.0 or higher, and you need to download the version compatible with your current CUDA environment.  
+To check your CUDA version, run the `nvidia-smi` command in the terminal.
+
+`For example:` if you're using CUDA 11.8, you should download Torch version 2.3.1.
+
 ###  Install SAM 2  
 ```bash  
-git clone https://github.com/facebookresearch/segment-anything-2.gitcd segment-anything-2pip install -e .
+git clone https://github.com/facebookresearch/segment-anything-2.git
+cd segment-anything-2 & pip install -e .
 ```  
   
 ### Setting Parameter  
